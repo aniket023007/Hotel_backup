@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Horizon Hotel & Resort — Receptionist Management System</title>
+  <meta name="description" content="Modern luxury hotel receptionist dashboard for room management, bookings, guest directory, and billing.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+</head>
+<body>
+
+  <!-- =========================================================================
+       TOP LUXURY BRAND & STATUS BAR
+       ========================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-crest">GH</div>
+        <div class="brand-text">
+          <h1>GRAND HORIZON <span>HOTEL & SUITES</span></h1>
+          <p>Front Desk & Concierge Operations</p>
+        </div>
+        <div class="header-status-pill" id="dbStatusPill">
+          <span class="status-dot"></span>
+          <span id="dbStatusText">MySQL Connected</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="live-clock">
+          <span class="clock-time" id="clockTime">--:--:--</span>
+          <span class="clock-date" id="clockDate">Loading date...</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary btn-sm" id="headerAddGuestBtn" onclick="openAddGuestModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7.5" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            + Guest
+          </button>
+          <button class="btn btn-primary btn-sm" id="headerNewBookingBtn" onclick="openBookingModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+            Book Room
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       NAVIGATION TABS
+       ========================================================================= -->
+  <div class="nav-tabs-wrapper">
+    <nav class="nav-tabs-container" aria-label="Main Navigation">
+      <button class="nav-tab-btn active" data-tab="dashboardTab" onclick="switchTab('dashboardTab')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard Overview
+      </button>
+
+      <button class="nav-tab-btn" data-tab="roomsTab" onclick="switchTab('roomsTab')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M21 11H3"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/></svg>
+        Rooms & Suites
+        <span class="nav-tab-badge" id="tabRoomsBadge">5</span>
+      </button>
+
+      <button class="nav-tab-btn" data-tab="bookingsTab" onclick="switchTab('bookingsTab')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Reservations & Stays
+        <span class="nav-tab-badge" id="tabBookingsBadge">0</span>
+      </button>
+
+      <button class="nav-tab-btn" data-tab="guestsTab" onclick="switchTab('guestsTab')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Guest Directory
+        <span class="nav-tab-badge" id="tabGuestsBadge">0</span>
+      </button>
+
+      <button class="nav-tab-btn" data-tab="billingTab" onclick="switchTab('billingTab')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Billing & Invoicing
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================= -->
+  <main class="main-content">
+
+    <!-- =======================================================================
+         TAB 1: DASHBOARD OVERVIEW
+         ======================================================================= -->
+    <section class="tab-pane active" id="dashboardTab">
+      <!-- Luxury Hero Card Banner -->
+      <div class="hero-card">
+        <img src="assets/hotel_hero.png" alt="Grand Horizon Hotel" class="hero-card-img" onerror="this.style.display='none'">
+        <div class="hero-card-overlay">
+          <div class="hero-card-content">
+            <span class="hero-card-tag">5-Star Luxury Experience</span>
+            <h2>Welcome, Concierge & Reception</h2>
+            <p>Manage reservations, live suite occupancy, guest check-ins, and automated billing with real-time MySQL synchronization.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Metric Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card gold">
+          <div class="stat-info">
+            <p>Total Suites</p>
+            <div class="stat-number" id="statTotalRooms">0</div>
+            <span class="stat-subtext" id="statRoomBreakdown">Inventory loaded</span>
+          </div>
+          <div class="stat-icon">🏨</div>
+        </div>
+
+        <div class="stat-card emerald">
+          <div class="stat-info">
+            <p>Available for Stay</p>
+            <div class="stat-number" id="statAvailableRooms">0</div>
+            <span class="stat-subtext" id="statAvailablePct">Ready for check-in</span>
+          </div>
+          <div class="stat-icon">✨</div>
+        </div>
+
+        <div class="stat-card ruby">
+          <div class="stat-info">
+            <p>Currently Occupied</p>
+            <div class="stat-number" id="statBookedRooms">0</div>
+            <span class="stat-subtext" id="statOccupancyPct">0% occupancy</span>
+          </div>
+          <div class="stat-icon">🗝️</div>
+        </div>
+
+        <div class="stat-card sapphire">
+          <div class="stat-info">
+            <p>Registered Guests</p>
+            <div class="stat-number" id="statTotalGuests">0</div>
+            <span class="stat-subtext">Active directory</span>
+          </div>
+          <div class="stat-icon">👥</div>
+        </div>
+
+        <div class="stat-card gold">
+          <div class="stat-info">
+            <p>Total Revenue</p>
+            <div class="stat-number" id="statTotalRevenue">₹0</div>
+            <span class="stat-subtext">From active & completed stays</span>
+          </div>
+          <div class="stat-icon">💰</div>
+        </div>
+      </div>
+
+      <!-- Split Overview Panels -->
+      <div class="overview-split">
+        <!-- Live Active Bookings Panel -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Active Guest Stays & In-House Residents
+            </h3>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('bookingsTab')">View All</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="luxury-table" id="dashboardActiveTable">
+              <thead>
+                <tr>
+                  <th>Booking #</th>
+                  <th>Guest</th>
+                  <th>Room</th>
+                  <th>Type</th>
+                  <th>Nights</th>
+                  <th>Tariff</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardActiveTableBody">
+                <tr>
+                  <td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                    Loading active stays...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Occupancy Breakdown & Quick Actions -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Occupancy Ratio
+            </h3>
+          </div>
+
+          <div class="occupancy-visual">
+            <div class="occupancy-bar-track">
+              <div class="occupancy-bar-fill" id="occupancyBarFill" style="width: 0%;"></div>
+            </div>
+            <div class="occupancy-labels">
+              <span id="occupancyRatioText">0 / 0 Rooms Occupied</span>
+              <span id="occupancyPercentText">0%</span>
+            </div>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="legend-box avail"></span>
+                <span>Available</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-box booked"></span>
+                <span>Occupied</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-header" style="margin-top: 1.5rem;">
+            <h3 class="panel-title">Quick Concierge Actions</h3>
+          </div>
+
+          <div class="quick-action-list">
+            <div class="quick-action-item" onclick="openBookingModal()">
+              <div class="quick-action-icon">🛎️</div>
+              <div class="quick-action-text">
+                <h4>Reserve a Room</h4>
+                <p>Assign room, nights, and calculate tariff</p>
+              </div>
+            </div>
+
+            <div class="quick-action-item" onclick="openAddGuestModal()">
+              <div class="quick-action-icon">👤</div>
+              <div class="quick-action-text">
+                <h4>Register New Guest</h4>
+                <p>Store contact details & address</p>
+              </div>
+            </div>
+
+            <div class="quick-action-item" onclick="switchTab('billingTab')">
+              <div class="quick-action-icon">🧾</div>
+              <div class="quick-action-text">
+                <h4>Invoice & Folio Calculator</h4>
+                <p>Generate bill and process checkout</p>
+              </div>
+            </div>
+
+            <div class="quick-action-item" onclick="openAddRoomModal()">
+              <div class="quick-action-icon">➕</div>
+              <div class="quick-action-text">
+                <h4>Add Room / Suite</h4>
+                <p>Register new room to hotel inventory</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 2: ROOMS & SUITES (INTERACTIVE ROOM GRID)
+         ======================================================================= -->
+    <section class="tab-pane" id="roomsTab">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <button class="filter-btn active" data-room-filter="all" onclick="filterRooms('all')">All Rooms</button>
+          <button class="filter-btn" data-room-filter="Available" onclick="filterRooms('Available')">Available Only</button>
+          <button class="filter-btn" data-room-filter="Booked" onclick="filterRooms('Booked')">Occupied Only</button>
+        </div>
+
+        <div class="filter-group">
+          <select class="form-control" id="roomTypeFilter" style="padding: 0.45rem 1rem; width: auto;" onchange="filterRoomsByType(this.value)">
+            <option value="all">All Room Types</option>
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+            <option value="Deluxe">Deluxe</option>
+            <option value="Suite">Suite</option>
+            <option value="Family">Family</option>
+          </select>
+
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="roomSearchInput" placeholder="Search room # or type..." oninput="searchRooms(this.value)">
+          </div>
+
+          <button class="btn btn-secondary btn-sm" onclick="openAddRoomModal()">+ Add Room</button>
+        </div>
+      </div>
+
+      <!-- Rooms Grid Cards -->
+      <div class="rooms-grid" id="roomsGridContainer">
+        <!-- Generated via app.js -->
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 3: RESERVATIONS & BOOKING HISTORY
+         ======================================================================= -->
+    <section class="tab-pane" id="bookingsTab">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <button class="filter-btn active" id="filterActiveBookingsBtn" onclick="toggleBookingsHistory(false)">
+            Active In-House Stays
+          </button>
+          <button class="filter-btn" id="filterAllHistoryBtn" onclick="toggleBookingsHistory(true)">
+            All Booking History & Checkouts
+          </button>
+        </div>
+
+        <div class="filter-group">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="bookingSearchInput" placeholder="Search guest name, room, or phone..." oninput="searchBookings(this.value)">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openBookingModal()">+ New Reservation</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="table-responsive">
+          <table class="luxury-table" id="bookingsMainTable">
+            <thead>
+              <tr>
+                <th>Booking #</th>
+                <th>Guest Name</th>
+                <th>Contact Phone</th>
+                <th>Room No.</th>
+                <th>Suite Type</th>
+                <th>Nights</th>
+                <th>Estimated Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsMainTableBody">
+              <!-- Rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 4: GUEST DIRECTORY
+         ======================================================================= -->
+    <section class="tab-pane" id="guestsTab">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <h3 style="font-size: 1.1rem; font-weight: 700;">Guest Directory</h3>
+        </div>
+
+        <div class="filter-group">
+          <div class="search-input-wrap" style="min-width: 320px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="guestSearchInput" placeholder="Search by name, phone, email, or address..." oninput="searchGuests(this.value)">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddGuestModal()">+ Register New Guest</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="table-responsive">
+          <table class="luxury-table" id="guestsTable">
+            <thead>
+              <tr>
+                <th>Guest ID</th>
+                <th>Full Name</th>
+                <th>Phone Number</th>
+                <th>Email Address</th>
+                <th>Residence / Address</th>
+                <th>Quick Actions</th>
+              </tr>
+            </thead>
+            <tbody id="guestsTableBody">
+              <!-- Rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 5: BILLING & FOLIO CALCULATOR
+         ======================================================================= -->
+    <section class="tab-pane" id="billingTab">
+      <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="panel-header">
+          <h3 class="panel-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Billing & Guest Folio Settlement
+          </h3>
+        </div>
+
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+          Enter an active Booking ID to calculate the itemized bill, apply applicable luxury taxes, review the folio, or execute formal checkout.
+        </p>
+
+        <form id="billingLookupForm" onsubmit="handleBillingLookup(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lookupBookingId">Select or Enter Booking ID *</label>
+              <select class="form-control" id="lookupBookingSelect" onchange="document.getElementById('lookupBookingId').value = this.value">
+                <option value="">-- Choose Active Booking --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lookupBookingId">Direct Booking ID Number</label>
+              <input type="number" id="lookupBookingId" class="form-control" placeholder="e.g. 101" required>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              Calculate & Preview Folio
+            </button>
+            <button type="button" class="btn btn-danger" style="flex: 1;" onclick="handleDirectCheckout()">
+              Process Direct Check Out
+            </button>
+          </div>
+        </form>
+
+        <div id="billingResultBox" style="margin-top: 2rem; display: none;">
+          <!-- Loaded dynamically with preview folio -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: BOOKING WIZARD MODAL
+       ========================================================================= -->
+  <dialog class="custom-modal" id="bookingModal">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M21 11H3"/></svg>
+        New Room Reservation
+      </h3>
+      <button class="modal-close-btn" onclick="closeModal('bookingModal')">&times;</button>
+    </div>
+
+    <form id="bookingForm" onsubmit="submitBooking(event)">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="bookingIdInput">Booking ID *</label>
+            <input type="number" id="bookingIdInput" class="form-control" required>
+            <span class="form-helper">Auto-suggested next ID from database</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookingGuestSelect">Select Guest *</label>
+            <select id="bookingGuestSelect" class="form-control" required>
+              <option value="">-- Choose Registered Guest --</option>
+            </select>
+            <span class="form-helper"><a href="javascript:void(0)" onclick="openAddGuestModal()" style="color: var(--text-gold);">+ Register New Guest</a></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="bookingRoomSelect">Select Available Room *</label>
+            <select id="bookingRoomSelect" class="form-control" required onchange="updateBookingCalc()">
+              <option value="">-- Choose Available Suite --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bookingNightsInput">Number of Nights *</label>
+            <input type="number" id="bookingNightsInput" class="form-control" value="1" min="1" required oninput="updateBookingCalc()">
+          </div>
+        </div>
+
+        <!-- Live Calculation Box -->
+        <div class="calc-summary-box" id="bookingCalcBox">
+          <div class="calc-row">
+            <span>Room Tariff Rate:</span>
+            <span id="calcRoomRate">₹0 / night</span>
+          </div>
+          <div class="calc-row">
+            <span>Length of Stay:</span>
+            <span id="calcNightsCount">1 night(s)</span>
+          </div>
+          <div class="calc-row">
+            <span>Room Subtotal:</span>
+            <span id="calcSubtotal">₹0</span>
+          </div>
+          <div class="calc-row">
+            <span>Hospitality GST (12%):</span>
+            <span id="calcTax">₹0</span>
+          </div>
+          <div class="calc-row total">
+            <span>Estimated Total:</span>
+            <span id="calcGrandTotal">₹0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('bookingModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="confirmBookingBtn">Confirm Reservation</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- =========================================================================
+       MODAL 2: ADD GUEST MODAL
+       ========================================================================= -->
+  <dialog class="custom-modal" id="addGuestModal">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7.5" r="4"/></svg>
+        Register New Guest
+      </h3>
+      <button class="modal-close-btn" onclick="closeModal('addGuestModal')">&times;</button>
+    </div>
+
+    <form id="addGuestForm" onsubmit="submitGuest(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="guestFullName">Full Name *</label>
+          <input type="text" id="guestFullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="guestPhone">Phone Number *</label>
+            <input type="tel" id="guestPhone" class="form-control" placeholder="e.g. +91 98765 43210" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="guestEmail">Email Address</label>
+            <input type="email" id="guestEmail" class="form-control" placeholder="e.g. rahul@example.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="guestAddress">Residential / Billing Address</label>
+          <textarea id="guestAddress" class="form-control" rows="2" placeholder="City, State, Country"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addGuestModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveGuestBtn">Save & Register Guest</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- =========================================================================
+       MODAL 3: ADD ROOM MODAL
+       ========================================================================= -->
+  <dialog class="custom-modal" id="addRoomModal">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/></svg>
+        Add Room to Inventory
+      </h3>
+      <button class="modal-close-btn" onclick="closeModal('addRoomModal')">&times;</button>
+    </div>
+
+    <form id="addRoomForm" onsubmit="submitRoom(event)">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="newRoomNumber">Room Number *</label>
+            <input type="text" id="newRoomNumber" class="form-control" placeholder="e.g. 401" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newRoomType">Room Category *</label>
+            <select id="newRoomType" class="form-control" required>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Deluxe">Deluxe</option>
+              <option value="Suite">Suite</option>
+              <option value="Family">Family</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="newRoomPrice">Tariff Rate Per Night (₹) *</label>
+          <input type="number" id="newRoomPrice" class="form-control" placeholder="e.g. 2500" step="50" min="500" required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addRoomModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Room</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- =========================================================================
+       MODAL 4: LUXURY HOTEL FOLIO & INVOICE MODAL (PRINTABLE)
+       ========================================================================= -->
+  <dialog class="custom-modal" id="invoiceModal">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        Official Hotel Folio & Invoice
+      </h3>
+      <button class="modal-close-btn" onclick="closeModal('invoiceModal')">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding: 1.5rem; background: #070b14;">
+      <div class="invoice-paper" id="invoicePrintArea">
+        <div class="invoice-header">
+          <div>
+            <div class="invoice-hotel-name">GRAND HORIZON HOTEL & RESORT</div>
+            <div class="invoice-hotel-sub">77 Luxury Boulevard, Marine Bay • Ph: +91 22 2490 8800</div>
+            <div class="invoice-hotel-sub">GSTIN: 27AABCG1234F1Z8 • contact@grandhorizonhotel.com</div>
+          </div>
+          <div style="text-align: right;">
+            <div id="invoiceStatusBadge" class="invoice-badge-status unpaid">ACTIVE FOLIO</div>
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; font-weight: 700; color: #64748b;" id="invoiceNumber">
+              FOLIO #GH-101
+            </div>
+          </div>
+        </div>
+
+        <div class="invoice-meta-grid">
+          <div class="invoice-meta-box">
+            <h4>Billed To (Guest)</h4>
+            <p><strong id="invoiceGuestName">Guest Name</strong></p>
+            <p id="invoiceGuestPhone">Phone: +91 0000000000</p>
+            <p id="invoiceGuestEmail">Email: guest@domain.com</p>
+            <p id="invoiceGuestAddress">Address: Mumbai, India</p>
+          </div>
+
+          <div class="invoice-meta-box" style="text-align: right;">
+            <h4>Stay Details</h4>
+            <p><strong>Room Number:</strong> <span id="invoiceRoomNumber">101</span></p>
+            <p><strong>Suite Category:</strong> <span id="invoiceRoomType">Deluxe</span></p>
+            <p><strong>Length of Stay:</strong> <span id="invoiceNights">2</span> Night(s)</p>
+            <p><strong>Date & Time:</strong> <span id="invoiceDate">--</span></p>
+          </div>
+        </div>
+
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Rate / Night</th>
+              <th class="text-right">Qty (Nights)</th>
+              <th class="text-right">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong id="invoiceItemDesc">Room Stay Charges</strong>
+                <div style="font-size: 0.78rem; color: #64748b;">Includes high-speed Wi-Fi & concierge service</div>
+              </td>
+              <td class="text-right" id="invoiceItemRate">₹2,000.00</td>
+              <td class="text-right" id="invoiceItemNights">2</td>
+              <td class="text-right" id="invoiceItemSubtotal">₹4,000.00</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="invoice-totals">
+          <div class="invoice-totals-row">
+            <span>Subtotal:</span>
+            <span id="invoiceSubtotalVal">₹4,000.00</span>
+          </div>
+          <div class="invoice-totals-row" id="invoiceDiscountRow" style="display: none; color: #10b981;">
+            <span id="invoiceDiscountLabel">Discount:</span>
+            <span id="invoiceDiscountVal">-₹0.00</span>
+          </div>
+          <div class="invoice-totals-row">
+            <span>CGST (6%):</span>
+            <span id="invoiceCgstVal">₹240.00</span>
+          </div>
+          <div class="invoice-totals-row">
+            <span>SGST (6%):</span>
+            <span id="invoiceSgstVal">₹240.00</span>
+          </div>
+          <div class="invoice-totals-row grand-total">
+            <span>Grand Total:</span>
+            <span id="invoiceGrandTotalVal">₹4,480.00</span>
+          </div>
+        </div>
+
+        <div class="invoice-footer-note">
+          Thank you for choosing Grand Horizon Hotel & Suites. We wish you pleasant travels!
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('invoiceModal')">Close</button>
+      <button type="button" class="btn btn-primary" onclick="printInvoice()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Invoice / Folio
+      </button>
+      <button type="button" class="btn btn-danger" id="invoiceCheckoutActionBtn" onclick="executeCheckoutFromInvoice()">
+        Confirm Checkout & Release Room
+      </button>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       TOAST NOTIFICATIONS CONTAINER
+       ========================================================================= -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

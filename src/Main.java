@@ -1,16 +1,15 @@
-import java.sql.SQLException;
-
 public class Main {
 
     public static void main(String[] args) {
-
-        RoomDAO roomDAO = new RoomDAO();
-
-        try {
-            roomDAO.displayRooms();
-
-        } catch (SQLException e) {
-            System.out.println("Database error: " + e.getMessage());
+        if (args.length > 0 && "--swing".equalsIgnoreCase(args[0])) {
+            System.out.println("Launching Swing Desktop Interface...");
+            MainFrame.main(args);
+        } else if (args.length > 0 && "--test".equalsIgnoreCase(args[0])) {
+            System.out.println("Running OOP Validation Suite...");
+            OOPTestRunner.main(args);
+        } else {
+            System.out.println("Starting Hotel Management Web Application...");
+            HotelWebServer.main(args);
         }
     }
 }

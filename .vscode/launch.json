@@ -1,0 +1,65 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "1. Run Hotel Web Application (Default)",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "HotelManagementSystem",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/bin"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "2. Run Swing Desktop Application",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": "--swing",
+            "projectName": "HotelManagementSystem",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/bin"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "3. Run OOP Validation Tests",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": "--test",
+            "projectName": "HotelManagementSystem",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/bin"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "4. Direct HotelWebServer",
+            "request": "launch",
+            "mainClass": "HotelWebServer",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/bin"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "5. Direct Swing MainFrame",
+            "request": "launch",
+            "mainClass": "MainFrame",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/bin"
+            ]
+        }
+    ]
+}

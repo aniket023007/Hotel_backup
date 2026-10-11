@@ -1,18 +1,22 @@
-
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLException;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+/**
+ * MainFrame Swing Desktop Application.
+ * Receptionist Dashboard providing a desktop graphical user interface.
+ * Adheres strictly to OOP Principles: Dependency Inversion, Service Delegation, and Domain Modeling.
+ */
 public class MainFrame extends JFrame {
 
-    private final RoomDAO roomDAO = new RoomDAO();
-    private final GuestDAO guestDAO = new GuestDAO();
-    private final BookingDAO bookingDAO = new BookingDAO();
+    private final IHotelService hotelService = new HotelService();
+    private final IRoomDAO roomDAO = new RoomDAO();
+    private final IGuestDAO guestDAO = new GuestDAO();
+    private final IBookingDAO bookingDAO = new BookingDAO();
+    private final ICheckoutDAO checkoutDAO = new CheckoutDAO();
 
     public MainFrame() {
-
         setTitle("Hotel Management System");
         setSize(800, 550);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -34,7 +38,7 @@ public class MainFrame extends JFrame {
         heading.setForeground(new Color(25, 55, 90));
 
         JLabel subtitle = new JLabel(
-            "Receptionist Dashboard",
+            "Receptionist Dashboard (Pure Java OOP)",
             SwingConstants.CENTER
         );
 
@@ -90,9 +94,7 @@ public class MainFrame extends JFrame {
 
     private void showRooms() {
         try {
-            ByteArrayOutputStream output =
-                new ByteArrayOutputStream();
-
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
             PrintStream oldOut = System.out;
 
             try (PrintStream newOut = new PrintStream(output)) {
@@ -120,9 +122,7 @@ public class MainFrame extends JFrame {
 
     private void showGuests() {
         try {
-            ByteArrayOutputStream output =
-                new ByteArrayOutputStream();
-
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
             PrintStream oldOut = System.out;
 
             try (PrintStream newOut = new PrintStream(output)) {
@@ -148,53 +148,50 @@ public class MainFrame extends JFrame {
         }
     }
 
-    // NEW FEATURE: View who booked which room
-  
-private void viewBooking() {
-    try {
-        javax.swing.table.DefaultTableModel model =
-            bookingDAO.getBookingsTableModel();
+    private void viewBooking() {
+        try {
+            javax.swing.table.DefaultTableModel model = bookingDAO.getBookingsTableModel();
 
-        JTable table = new JTable(model);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        table.setRowHeight(28);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.setFillsViewportHeight(true);
+            JTable table = new JTable(model);
+            table.setFont(new Font("Arial", Font.PLAIN, 13));
+            table.setRowHeight(28);
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            table.setFillsViewportHeight(true);
 
-        table.getTableHeader().setFont(
-            new Font("Arial", Font.BOLD, 13)
-        );
+            table.getTableHeader().setFont(
+                new Font("Arial", Font.BOLD, 13)
+            );
 
-        int[] widths = {90, 160, 120, 90, 120, 70, 110};
+            int[] widths = {90, 160, 120, 90, 120, 70, 110};
 
-        for (int i = 0; i < widths.length; i++) {
-            table.getColumnModel()
-                 .getColumn(i)
-                 .setPreferredWidth(widths[i]);
+            for (int i = 0; i < widths.length; i++) {
+                table.getColumnModel()
+                     .getColumn(i)
+                     .setPreferredWidth(widths[i]);
+            }
+
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setPreferredSize(new Dimension(780, 350));
+
+            String message = model.getRowCount() == 0
+                ? "No bookings found."
+                : "Total bookings: " + model.getRowCount();
+
+            JPanel panel = new JPanel(new BorderLayout(5, 5));
+            panel.add(new JLabel(message), BorderLayout.NORTH);
+            panel.add(scrollPane, BorderLayout.CENTER);
+
+            JOptionPane.showMessageDialog(
+                this,
+                panel,
+                "Hotel Booking Details",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (Exception ex) {
+            showError(ex);
         }
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(780, 350));
-
-        String message = model.getRowCount() == 0
-            ? "No bookings found."
-            : "Total bookings: " + model.getRowCount();
-
-        JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.add(new JLabel(message), BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        JOptionPane.showMessageDialog(
-            this,
-            panel,
-            "Hotel Booking Details",
-            JOptionPane.INFORMATION_MESSAGE
-        );
-
-    } catch (Exception ex) {
-        showError(ex);
     }
-}
 
     private void addGuest() {
         JTextField nameField = new JTextField();
@@ -228,15 +225,17 @@ private void viewBooking() {
         }
 
         try {
-            guestDAO.addGuest(
+            Guest guest = new Guest(
                 nameField.getText().trim(),
                 phoneField.getText().trim(),
                 emailField.getText().trim(),
                 addressField.getText().trim()
             );
 
+            int guestId = hotelService.registerGuest(guest);
+
             JOptionPane.showMessageDialog(
-                this, "Guest saved successfully!"
+                this, "Guest registered successfully with ID #" + guestId
             );
 
         } catch (Exception ex) {
@@ -244,79 +243,67 @@ private void viewBooking() {
         }
     }
 
-    
-private void bookRoom() {
+    private void bookRoom() {
+        JTextField bookingIdField = new JTextField();
+        JTextField guestIdField = new JTextField();
+        JTextField roomIdField = new JTextField();
+        JTextField nightsField = new JTextField();
 
-    JTextField bookingIdField = new JTextField();
-    JTextField guestIdField = new JTextField();
-    JTextField roomIdField = new JTextField();
-    JTextField nightsField = new JTextField();
+        try {
+            bookingIdField.setText(String.valueOf(hotelService.getNextBookingId()));
+        } catch (Exception ignored) {}
 
-    Object[] fields = {
-        "Booking ID:", bookingIdField,
-        "Guest ID:", guestIdField,
-        "Room ID:", roomIdField,
-        "Number of Nights:", nightsField
-    };
+        Object[] fields = {
+            "Booking ID:", bookingIdField,
+            "Guest ID:", guestIdField,
+            "Room ID:", roomIdField,
+            "Number of Nights:", nightsField
+        };
 
-    int result = JOptionPane.showConfirmDialog(
-        this,
-        fields,
-        "Book a Room",
-        JOptionPane.OK_CANCEL_OPTION
-    );
-
-    if (result != JOptionPane.OK_OPTION) {
-        return;
-    }
-
-    try {
-        int bookingId = Integer.parseInt(
-            bookingIdField.getText().trim()
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            fields,
+            "Book a Room",
+            JOptionPane.OK_CANCEL_OPTION
         );
 
-        int guestId = Integer.parseInt(
-            guestIdField.getText().trim()
-        );
-
-        int roomId = Integer.parseInt(
-            roomIdField.getText().trim()
-        );
-
-        int nights = Integer.parseInt(
-            nightsField.getText().trim()
-        );
-
-        if (bookingId <= 0 || guestId <= 0 ||
-                roomId <= 0 || nights <= 0) {
-            throw new IllegalArgumentException(
-                "All IDs and nights must be positive."
-            );
+        if (result != JOptionPane.OK_OPTION) {
+            return;
         }
 
-        bookingDAO.bookRoom(
-            bookingId, guestId, roomId, nights
-        );
+        try {
+            int bookingId = Integer.parseInt(bookingIdField.getText().trim());
+            int guestId = Integer.parseInt(guestIdField.getText().trim());
+            int roomId = Integer.parseInt(roomIdField.getText().trim());
+            int nights = Integer.parseInt(nightsField.getText().trim());
 
-        JOptionPane.showMessageDialog(
-            this,
-            "Room booked successfully!",
-            "Success",
-            JOptionPane.INFORMATION_MESSAGE
-        );
+            if (bookingId <= 0 || guestId <= 0 || roomId <= 0 || nights <= 0) {
+                throw new IllegalArgumentException("All IDs and nights must be positive.");
+            }
 
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(
-            this,
-            "Please enter valid numeric IDs and nights.",
-            "Input Error",
-            JOptionPane.ERROR_MESSAGE
-        );
+            Booking booking = hotelService.bookRoom(bookingId, guestId, roomId, nights);
 
-    } catch (Exception ex) {
-        showError(ex);
+            JOptionPane.showMessageDialog(
+                this,
+                "Room booked successfully!\nReservation #" + booking.getBookingId() +
+                "\nGuest: " + booking.getGuest().getName() +
+                "\nTotal: ₹" + booking.calculateTotalAmount(),
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Please enter valid numeric IDs and nights.",
+                "Input Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+
+        } catch (Exception ex) {
+            showError(ex);
+        }
     }
-}
 
     private void calculateBill() {
         String input = JOptionPane.showInputDialog(
@@ -331,18 +318,24 @@ private void bookRoom() {
             int bookingId = Integer.parseInt(input.trim());
 
             if (bookingId <= 0) {
-                throw new IllegalArgumentException(
-                    "Booking ID must be positive."
-                );
+                throw new IllegalArgumentException("Booking ID must be positive.");
             }
 
-            java.math.BigDecimal total =
-                new CheckoutDAO().calculateBill(bookingId);
+            Bill bill = hotelService.calculateBill(bookingId);
+
+            String discountLine = bill.getDiscount() > 0 ? "\nDiscount: -₹" + bill.getDiscount() : "";
 
             JOptionPane.showMessageDialog(
                 this,
-                "Booking ID: " + bookingId +
-                "\nTotal Bill: ₹" + total,
+                "Booking ID: #" + bookingId +
+                "\nGuest: " + bill.getBooking().getGuest().getName() +
+                "\nRoom: #" + bill.getBooking().getRoom().getRoomNumber() + " (" + bill.getBooking().getRoom().getRoomType() + ")" +
+                "\nNights: " + bill.getBooking().getNumberOfNights() +
+                "\nSubtotal: ₹" + bill.getSubtotal() +
+                discountLine +
+                "\nTax (" + (int) bill.getTaxRate() + "% GST): ₹" + bill.getTaxAmount() +
+                "\nGrand Total: ₹" + bill.getGrandTotal() +
+                "\nRate Scheme: " + bill.getStrategy().getStrategyName(),
                 "Bill Details",
                 JOptionPane.INFORMATION_MESSAGE
             );
@@ -369,20 +362,18 @@ private void bookRoom() {
             int bookingId = Integer.parseInt(input.trim());
 
             if (bookingId <= 0) {
-                throw new IllegalArgumentException(
-                    "Booking ID must be positive."
-                );
+                throw new IllegalArgumentException("Booking ID must be positive.");
             }
 
-            java.math.BigDecimal total =
-                new CheckoutDAO().checkout(bookingId);
+            Bill bill = hotelService.processCheckout(bookingId);
 
             JOptionPane.showMessageDialog(
                 this,
                 "Checkout successful!\n" +
-                "Booking ID: " + bookingId +
-                "\nFinal Bill: ₹" + total +
-                "\nRoom is now available.",
+                "Booking ID: #" + bookingId +
+                "\nGuest: " + bill.getBooking().getGuest().getName() +
+                "\nFinal Bill: ₹" + bill.getGrandTotal() +
+                "\nRoom #" + bill.getBooking().getRoom().getRoomNumber() + " is now available.",
                 "Checkout Complete",
                 JOptionPane.INFORMATION_MESSAGE
             );

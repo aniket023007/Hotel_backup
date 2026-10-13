@@ -6,6 +6,49 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+// =============================================================================
+// USER DATA ACCESS INTERFACE
+// =============================================================================
+
+/**
+ * IUserDAO interface defining persistence contracts for user entities.
+ * Demonstrates:
+ * - Abstraction: Hides low-level MySQL queries from business layers
+ * - DAO Pattern: Decouples domain logic from persistence technology
+ * - Dependency Inversion Principle: High-level modules depend on this abstraction
+ */
+interface IUserDAO {
+
+    /**
+     * Finds a user by their unique username.
+     */
+    User findByUsername(String username) throws SQLException;
+
+    /**
+     * Finds a user by their primary key user_id.
+     */
+    User findById(int userId) throws SQLException;
+
+    /**
+     * Retrieves all registered system users.
+     */
+    List<User> getAllUsers() throws SQLException;
+
+    /**
+     * Persists a new user into MySQL with an encrypted SHA-256 password.
+     */
+    int saveUser(User user, String plainPassword) throws SQLException;
+
+    /**
+     * Checks if a username is already taken.
+     */
+    boolean userExists(String username) throws SQLException;
+}
+
+// =============================================================================
+// USER DATA ACCESS OBJECT (DAO Pattern Implementation)
+// =============================================================================
+
 /**
  * UserDAO implements IUserDAO.
  * Handles database operations for the MySQL `users` table.

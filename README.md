@@ -4,11 +4,29 @@ An enterprise-grade **Hotel Management System** built strictly using **Core Java
 
 ---
 
-## 📁 Project Directory
+## 📁 Project Directory & Clean 16-File Architecture
 
 ```
 c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup
 ```
+
+The backend is cleanly structured into **16 consolidated source files** in `backend/src/` (reduced from 49 separate files):
+- **`Person.java`**: Abstract base `Person`, `Guest`, and `Staff`.
+- **`Room.java`**: Abstract base `Room`, `Bookable`, `Billable`, `Displayable`, `RoomStatus`, `StandardRoom`, `DeluxeRoom`, `SuiteRoom`, `FamilyRoom`, and `RoomFactory`.
+- **`User.java`**: Abstract base `User`, `Authenticatable`, `LoginCredentials`, `AuthenticationException`, `AdminUser`, `ReceptionistUser`, `ManagerUser`, and `UserFactory`.
+- **`Bill.java`**: `Bill` invoice entity + Strategy Pattern (`BillingStrategy`, `StandardBillingStrategy`, `CorporateBillingStrategy`, `ExtendedStayBillingStrategy`).
+- **`Booking.java`**: `Booking` reservation domain model, `BookingStatus` enum, and `HotelStatistics` KPI DTO.
+- **`DatabaseConnection.java`**: Singleton JDBC database connection manager.
+- **`RoomDAO.java`**: `RoomDAO` and `IRoomDAO` interface.
+- **`GuestDAO.java`**: `GuestDAO` and `IGuestDAO` interface.
+- **`BookingDAO.java`**: `BookingDAO`, `IBookingDAO`, `CheckoutDAO`, and `ICheckoutDAO`.
+- **`UserDAO.java`**: `UserDAO` and `IUserDAO` interface.
+- **`HotelService.java`**: `HotelService` and `IHotelService` business workflow facade.
+- **`AuthService.java`**: `AuthService` singleton and `IAuthService` authentication facade.
+- **`LoginFrame.java`**: Complete Swing Desktop GUI (`LoginFrame` portal and `MainFrame` dashboard).
+- **`HotelWebServer.java`**: Multi-threaded Java HTTP Server & REST API.
+- **`Main.java`**: CLI & Bootstrap entrypoint.
+- **`OOPTestRunner.java`**: Automated 7-point OOP verification test runner.
 
 ---
 
@@ -21,7 +39,6 @@ c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup
    ```
    c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup
    ```
-   *(Alternatively, open PowerShell/Command Prompt and run `code c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup`)*
 
 ---
 
@@ -64,25 +81,28 @@ java -cp "backend/lib/*;lib/*;backend/bin" OOPTestRunner
 
 ### 1. The Four Pillars of OOP
 * **Abstraction**:
-  * Abstract classes: `Person`, `Room`.
-  * Behavioral interfaces: `Bookable`, `Billable`, `Displayable`.
-  * Contract interfaces: `IHotelService`, `IGuestDAO`, `IRoomDAO`, `IBookingDAO`, `ICheckoutDAO`.
+  * Abstract classes: `Person`, `Room`, `User`.
+  * Behavioral interfaces: `Bookable`, `Billable`, `Displayable`, `Authenticatable`.
+  * Contract interfaces: `IHotelService`, `IAuthService`, `IGuestDAO`, `IRoomDAO`, `IBookingDAO`, `ICheckoutDAO`, `IUserDAO`.
 * **Encapsulation**:
   * Private member variables, strict input validation, guarded domain mutations (`room.bookRoom()`, `room.checkOut()`, `bill.recalculate()`).
-  * Value object: `HotelStatistics` (immutable KPI data carrier).
+  * Cryptographic hashing: `User.hashPassword(...)` encapsulates SHA-256 computation inside the domain model.
+  * Value objects: `LoginCredentials`, `HotelStatistics` (immutable data carriers).
 * **Inheritance**:
-  * `Person` $\rightarrow$ `Guest`, `Staff`.
+  * `Person` $\rightarrow$ `Guest`, `Staff`, `User`.
+  * `User` $\rightarrow$ `AdminUser`, `ReceptionistUser`, `ManagerUser`.
   * `Room` $\rightarrow$ `StandardRoom`, `DeluxeRoom`, `SuiteRoom`, `FamilyRoom`.
 * **Polymorphism**:
-  * **Runtime Polymorphism**: Dynamic method overriding (`getAmenities()`, `getMaxOccupancy()`, `displayDetails()`).
+  * **Runtime Polymorphism**: Dynamic method overriding (`getAmenities()`, `getMaxOccupancy()`, `displayDetails()`, `hasPermission()`).
   * **Strategy Pattern**: `BillingStrategy` polymorphically plugged into `Bill` (`StandardBillingStrategy`, `CorporateBillingStrategy`, `ExtendedStayBillingStrategy`).
-  * **Compile-Time Polymorphism**: Overloaded constructors and service methods throughout.
+  * **Compile-Time Polymorphism**: Overloaded constructors and overloaded methods (`login(username, password)` vs `login(credentials)`).
 
 ### 2. Design Patterns
-* **Factory Method Pattern**: `RoomFactory.createRoom(...)` dynamically instantiates the correct `Room` subclass based on room category.
+* **Factory Method Pattern**: `RoomFactory.createRoom(...)` and `UserFactory.createUser(...)`.
 * **Strategy Pattern**: `BillingStrategy` for polymorphic discount and tax calculations.
 * **DAO (Data Access Object) Pattern**: Decouples database queries from business rules.
-* **Service Layer Pattern**: `HotelService` orchestrates domain models and DAOs with Dependency Injection.
+* **Service Layer Pattern**: `HotelService` and `AuthService` orchestrate domain models and DAOs with Dependency Injection.
+* **Singleton Pattern**: `DatabaseConnection` and `AuthService.getInstance()`.
 * **Object Composition**: `Booking` HAS-A `Guest` and `Room`; `Bill` HAS-A `Booking` and `BillingStrategy`.
 
 ---
@@ -92,7 +112,7 @@ java -cp "backend/lib/*;lib/*;backend/bin" OOPTestRunner
 * **Database**: `hotel_management`
 * **Driver**: `lib/mysql-connector-j-26.7.0.jar`
 
-### 🔐 Database Demo Accounts (SHA-256 Hashed)
+### 🔐 Database Accounts (SHA-256 Hashed)
 Passwords are stored in the MySQL `users` table as SHA-256 hashes. Plain text passwords are validated through Java `MessageDigest` SHA-256 in the domain model (`User.verifyPassword(...)`):
 
 | Role | Username | Password | Stored SHA-256 Hash |
@@ -100,4 +120,3 @@ Passwords are stored in the MySQL `users` table as SHA-256 hashes. Plain text pa
 | **🛎️ Receptionist** | `receptionist` | `staff123` | `10176e7b7b24d317acfcf8d2064cfd2f24e154f7b5a96603077d5ef813d6a6b6` |
 | **👑 Admin** | `admin` | `Admin@123` / `admin123` | `e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7` |
 | **👔 Manager** | `manager` | `manager123` | `866485796cfa8d7c0cf7111640205b83076433547577511d81f8030ae99ecea5` |
-

@@ -1,13 +1,17 @@
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
- * Abstract Person base class representing common attributes and behaviors
- * for humans in the hotel system (Guests, Staff).
- * Demonstrates Abstraction and Encapsulation.
+ * =============================================================================
+ * PERSON DOMAIN HIERARCHY
+ * Demonstrates:
+ * - Abstraction: Abstract Person class defining base template for humans in the hotel
+ * - Inheritance: Guest and Staff extend Person (IS-A relationship)
+ * - Polymorphism: Overridden displayDetails() for Guests and Staff
+ * - Encapsulation: Guarded private fields with validated accessors
+ * =============================================================================
  */
-
-
-
 public abstract class Person implements Displayable {
 
     private int id;
@@ -15,7 +19,7 @@ public abstract class Person implements Displayable {
     private String phone;
     private String email;
 
-    // Overloaded Constructor 1
+    // Overloaded Constructor 1 (Compile-time Polymorphism)
     public Person(int id, String name) {
         this(id, name, "", "");
     }
@@ -31,7 +35,7 @@ public abstract class Person implements Displayable {
         this.email = email != null ? email.trim() : "";
     }
 
-    // Getters and Setters (Encapsulation)
+    // Encapsulation: Getters and Setters
     public int getId() {
         return id;
     }
@@ -87,5 +91,143 @@ public abstract class Person implements Displayable {
     @Override
     public String toString() {
         return "Person[id=" + id + ", name='" + name + "', phone='" + phone + "', email='" + email + "']";
+    }
+}
+
+/**
+ * Guest entity extending Person.
+ * Demonstrates Inheritance & Polymorphic displayDetails().
+ */
+class Guest extends Person {
+
+    private String address;
+    private int loyaltyPoints;
+
+    public Guest(int id, String name, String phone) {
+        this(id, name, phone, "", "");
+    }
+
+    public Guest(int id, String name, String phone, String email, String address) {
+        super(id, name, phone, email);
+        this.address = address != null ? address.trim() : "";
+        this.loyaltyPoints = 0;
+    }
+
+    public Guest(String name, String phone, String email, String address) {
+        this(0, name, phone, email, address);
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address != null ? address.trim() : "";
+    }
+
+    public int getLoyaltyPoints() {
+        return loyaltyPoints;
+    }
+
+    public void addLoyaltyPoints(int points) {
+        if (points > 0) {
+            this.loyaltyPoints += points;
+        }
+    }
+
+    @Override
+    public void displayDetails() {
+        System.out.println("----- Guest Profile -----");
+        System.out.println("ID:       " + getId());
+        System.out.println("Name:     " + getName());
+        System.out.println("Phone:    " + getPhone());
+        System.out.println("Email:    " + getEmail());
+        System.out.println("Address:  " + address);
+        System.out.println("Points:   " + loyaltyPoints);
+        System.out.println("-------------------------");
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("guestId", getId());
+        map.put("fullName", getName());
+        map.put("phone", getPhone());
+        map.put("email", getEmail());
+        map.put("address", address);
+        map.put("loyaltyPoints", loyaltyPoints);
+        return map;
+    }
+
+    @Override
+    public String toString() {
+        return "Guest[id=" + getId() + ", name='" + getName() + "', phone='" + getPhone() + "']";
+    }
+}
+
+/**
+ * Staff entity extending Person.
+ * Demonstrates Inheritance & Polymorphic displayDetails().
+ */
+class Staff extends Person {
+
+    private String role;
+    private String department;
+    private double salary;
+
+    public Staff(int id, String name, String phone, String email, String role, String department, double salary) {
+        super(id, name, phone, email);
+        this.role = role != null ? role.trim() : "Receptionist";
+        this.department = department != null ? department.trim() : "Front Desk";
+        this.salary = Math.max(0.0, salary);
+    }
+
+    public Staff(int id, String name, String role, String department) {
+        this(id, name, "", "", role, department, 0.0);
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role != null ? role.trim() : "";
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department != null ? department.trim() : "";
+    }
+
+    public double getSalary() {
+        return salary;
+    }
+
+    public void setSalary(double salary) {
+        this.salary = Math.max(0.0, salary);
+    }
+
+    @Override
+    public void displayDetails() {
+        System.out.println("----- Staff Member -----");
+        System.out.println("ID:         " + getId());
+        System.out.println("Name:       " + getName());
+        System.out.println("Role:       " + role);
+        System.out.println("Department: " + department);
+        System.out.println("Phone:      " + getPhone());
+        System.out.println("------------------------");
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("staffId", getId());
+        map.put("name", getName());
+        map.put("phone", getPhone());
+        map.put("email", getEmail());
+        map.put("role", role);
+        map.put("department", department);
+        return map;
     }
 }

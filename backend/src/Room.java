@@ -1,12 +1,79 @@
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Abstract Room base class.
- * Demonstrates Abstraction, Encapsulation, and Interface Implementation (Bookable, Billable, Displayable).
+ * =============================================================================
+ * ROOM DOMAIN HIERARCHY & FACTORY PATTERN
+ * Demonstrates:
+ * - Abstraction: Abstract Room class + Bookable, Billable, Displayable interfaces
+ * - Inheritance: StandardRoom, DeluxeRoom, SuiteRoom, FamilyRoom extend Room
+ * - Polymorphism: Overridden getAmenities(), getMaxOccupancy(), displayDetails()
+ * - Encapsulation: Private state (price, status) with guarded mutations
+ * - Factory Method Pattern: RoomFactory instantiates subclasses dynamically
+ * =============================================================================
  */
+
+// =============================================================================
+// INTERFACES (Behavioral Contracts)
+// =============================================================================
+
+interface Displayable {
+    void displayDetails();
+}
+
+interface Bookable {
+    boolean isAvailable();
+    void bookRoom();
+    void checkOut();
+}
+
+interface Billable {
+    double calculateTotalCost(int numberOfNights);
+}
+
+// =============================================================================
+// ROOM STATUS ENUM
+// =============================================================================
+
+enum RoomStatus {
+    AVAILABLE("Available"),
+    BOOKED("Booked"),
+    MAINTENANCE("Maintenance");
+
+    private final String displayName;
+
+    RoomStatus(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public static RoomStatus fromString(String text) {
+        if (text == null) return AVAILABLE;
+        for (RoomStatus status : RoomStatus.values()) {
+            if (status.displayName.equalsIgnoreCase(text.trim()) ||
+                status.name().equalsIgnoreCase(text.trim())) {
+                return status;
+            }
+        }
+        return AVAILABLE;
+    }
+
+    @Override
+    public String toString() {
+        return displayName;
+    }
+}
+
+// =============================================================================
+// ABSTRACT BASE ROOM CLASS
+// =============================================================================
+
 public abstract class Room implements Bookable, Billable, Displayable {
 
     private int roomId;
@@ -15,12 +82,10 @@ public abstract class Room implements Bookable, Billable, Displayable {
     private double pricePerNight;
     private RoomStatus status;
 
-    // Overloaded Constructor 1 (Backward compatible with original 3-arg constructor)
     public Room(int roomNumber, String roomType, double pricePerNight) {
         this(roomNumber, String.valueOf(roomNumber), roomType, pricePerNight, RoomStatus.AVAILABLE);
     }
 
-    // Overloaded Constructor 2 (Full domain constructor)
     public Room(int roomId, String roomNumber, String roomType, double pricePerNight, RoomStatus status) {
         if (roomNumber == null || roomNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("Room number cannot be empty.");
@@ -134,7 +199,6 @@ public abstract class Room implements Bookable, Billable, Displayable {
         System.out.println("------------------------");
     }
 
-    // Map representation for Web API compatibility
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("roomId", roomId);
@@ -163,5 +227,121 @@ public abstract class Room implements Bookable, Billable, Displayable {
     @Override
     public String toString() {
         return "Room[id=" + roomId + ", number='" + roomNumber + "', type='" + roomType + "', price=" + pricePerNight + ", status=" + status + "]";
+    }
+}
+
+// =============================================================================
+// CONCRETE POLYMORPHIC SUBCLASSES
+// =============================================================================
+
+class StandardRoom extends Room {
+
+    public StandardRoom(int roomId, String roomNumber, double pricePerNight, RoomStatus status) {
+        super(roomId, roomNumber, "Single", pricePerNight, status);
+    }
+
+    public StandardRoom(int roomNumber, double pricePerNight) {
+        super(roomNumber, "Single", pricePerNight);
+    }
+
+    @Override
+    public List<String> getAmenities() {
+        return Arrays.asList("Single Bed", "High-speed Wi-Fi 500Mbps", "Air Conditioning", "Work Desk");
+    }
+
+    @Override
+    public int getMaxOccupancy() {
+        return 1;
+    }
+}
+
+class DeluxeRoom extends Room {
+
+    public DeluxeRoom(int roomId, String roomNumber, String roomType, double pricePerNight, RoomStatus status) {
+        super(roomId, roomNumber, (roomType != null && !roomType.trim().isEmpty()) ? roomType : "Deluxe", pricePerNight, status);
+    }
+
+    public DeluxeRoom(int roomNumber, double pricePerNight) {
+        super(roomNumber, "Deluxe", pricePerNight);
+    }
+
+    @Override
+    public List<String> getAmenities() {
+        return Arrays.asList("King/Queen Bed", "High-speed Wi-Fi 500Mbps", "Balcony", "Smart TV 55\"", "En-suite Tub", "Mini Fridge");
+    }
+
+    @Override
+    public int getMaxOccupancy() {
+        return 2;
+    }
+}
+
+class SuiteRoom extends Room {
+
+    public SuiteRoom(int roomId, String roomNumber, double pricePerNight, RoomStatus status) {
+        super(roomId, roomNumber, "Suite", pricePerNight, status);
+    }
+
+    public SuiteRoom(int roomNumber, double pricePerNight) {
+        super(roomNumber, "Suite", pricePerNight);
+    }
+
+    @Override
+    public List<String> getAmenities() {
+        return Arrays.asList("Master Suite", "Separate Living Area", "Panoramic Skyline View", "Jacuzzi Spa", "Butler Service", "Complimentary Minibar");
+    }
+
+    @Override
+    public int getMaxOccupancy() {
+        return 4;
+    }
+}
+
+class FamilyRoom extends Room {
+
+    public FamilyRoom(int roomId, String roomNumber, double pricePerNight, RoomStatus status) {
+        super(roomId, roomNumber, "Family", pricePerNight, status);
+    }
+
+    public FamilyRoom(int roomNumber, double pricePerNight) {
+        super(roomNumber, "Family", pricePerNight);
+    }
+
+    @Override
+    public List<String> getAmenities() {
+        return Arrays.asList("2 Queen Beds", "Connecting Rooms", "Dining Area", "Kids Play Zone", "Kitchenette", "Smart TV 65\"");
+    }
+
+    @Override
+    public int getMaxOccupancy() {
+        return 5;
+    }
+}
+
+// =============================================================================
+// FACTORY METHOD PATTERN
+// =============================================================================
+
+class RoomFactory {
+
+    public static Room createRoom(int roomId, String roomNumber, String roomType, double pricePerNight, RoomStatus status) {
+        if (roomType == null) {
+            return new StandardRoom(roomId, roomNumber, pricePerNight, status);
+        }
+
+        String typeLower = roomType.trim().toLowerCase();
+        if (typeLower.contains("suite")) {
+            return new SuiteRoom(roomId, roomNumber, pricePerNight, status);
+        } else if (typeLower.contains("family")) {
+            return new FamilyRoom(roomId, roomNumber, pricePerNight, status);
+        } else if (typeLower.contains("deluxe") || typeLower.contains("double")) {
+            return new DeluxeRoom(roomId, roomNumber, roomType, pricePerNight, status);
+        } else {
+            return new StandardRoom(roomId, roomNumber, pricePerNight, status);
+        }
+    }
+
+    public static Room createRoom(String roomNumber, String roomType, double pricePerNight) {
+        return createRoom(0, roomNumber, roomType, pricePerNight, RoomStatus.AVAILABLE);
     }
 }

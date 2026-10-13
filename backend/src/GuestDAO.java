@@ -7,6 +7,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// =============================================================================
+// GUEST DATA ACCESS INTERFACE
+// =============================================================================
+
+/**
+ * IGuestDAO interface defining the data access contract for Guest entities.
+ * Demonstrates Abstraction and Interface Segregation Principle (ISP).
+ */
+interface IGuestDAO {
+    void addGuest(String fullName, String phone, String email, String address) throws SQLException;
+    int addGuestAndGetId(String fullName, String phone, String email, String address) throws SQLException;
+    int saveGuest(Guest guest) throws SQLException;
+    List<Guest> getAllGuestEntities() throws SQLException;
+    Guest getGuestEntityById(int guestId) throws SQLException;
+    void displayGuests() throws SQLException;
+}
+
+// =============================================================================
+// GUEST DATA ACCESS OBJECT (DAO Pattern Implementation)
+// =============================================================================
+
 /**
  * GuestDAO implements IGuestDAO.
  * Handles persistence and retrieval of Guest domain entities with MySQL.

@@ -1,6 +1,66 @@
 import java.sql.SQLException;
 import java.util.List;
 
+// =============================================================================
+// AUTHENTICATION SERVICE INTERFACE
+// =============================================================================
+
+/**
+ * IAuthService interface defining the service layer contract for authentication.
+ * Demonstrates:
+ * - Service Layer Pattern
+ * - Abstraction
+ * - Dependency Inversion Principle (DIP)
+ * - Compile-Time Polymorphism (Method Overloading on login)
+ */
+interface IAuthService {
+
+    /**
+     * Authenticates a user with explicit username and plain-text password.
+     */
+    User login(String username, String password) throws AuthenticationException;
+
+    /**
+     * Overloaded login method accepting an encapsulated LoginCredentials value object.
+     * Demonstrates Static (Compile-Time) Polymorphism.
+     */
+    User login(LoginCredentials credentials) throws AuthenticationException;
+
+    /**
+     * Terminates the current active session.
+     */
+    void logout();
+
+    /**
+     * Retrieves the currently authenticated User entity.
+     */
+    User getCurrentUser();
+
+    /**
+     * Checks if a user is currently authenticated in this session.
+     */
+    boolean isAuthenticated();
+
+    /**
+     * Polymorphically verifies if the current session user holds the required permission.
+     */
+    boolean checkPermission(String permission);
+
+    /**
+     * Registers a new user into the database.
+     */
+    int registerUser(User user, String plainPassword) throws AuthenticationException;
+
+    /**
+     * Retrieves all system users (subject to admin access verification).
+     */
+    List<User> listAllUsers() throws AuthenticationException;
+}
+
+// =============================================================================
+// AUTHENTICATION SERVICE IMPLEMENTATION (Service Layer & Singleton Pattern)
+// =============================================================================
+
 /**
  * AuthService implements IAuthService.
  * Orchestrates business logic for user authentication, password verification,
@@ -24,8 +84,6 @@ public class AuthService implements IAuthService {
 
     /**
      * Constructor with Dependency Injection.
-     *
-     * @param userDAO Injected data access implementation
      */
     public AuthService(IUserDAO userDAO) {
         if (userDAO == null) {

@@ -6,6 +6,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// =============================================================================
+// ROOM DATA ACCESS INTERFACE
+// =============================================================================
+
+/**
+ * IRoomDAO interface defining the data access contract for Room entities.
+ * Demonstrates Abstraction and Interface Segregation Principle (ISP).
+ */
+interface IRoomDAO {
+    List<Room> getAllRoomEntities() throws SQLException;
+    Room getRoomEntityById(int roomId) throws SQLException;
+    void addRoom(Room room) throws SQLException;
+    void addRoom(String roomNumber, String roomType, double pricePerNight) throws SQLException;
+    void displayRooms() throws SQLException;
+}
+
+// =============================================================================
+// ROOM DATA ACCESS OBJECT (DAO Pattern Implementation)
+// =============================================================================
+
 /**
  * RoomDAO implements IRoomDAO.
  * Handles persistence and retrieval of Room domain entities with MySQL.

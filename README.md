@@ -4,26 +4,33 @@ An enterprise-grade **Hotel Management System** built strictly using **Core Java
 
 ---
 
-## 📁 Project Directory & Clean 16-File Architecture
+## 📁 Project Directory & Clean 23-File Modular Architecture
 
 ```
 c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup
 ```
 
-The backend is cleanly structured into **16 consolidated source files** in `backend/src/` (reduced from 49 separate files):
+The backend is cleanly structured into **23 modular source files** in `backend/src/`, each focused on a single responsibility (~25 to 250 lines each):
 - **`Person.java`**: Abstract base `Person`, `Guest`, and `Staff`.
-- **`Room.java`**: Abstract base `Room`, `Bookable`, `Billable`, `Displayable`, `RoomStatus`, `StandardRoom`, `DeluxeRoom`, `SuiteRoom`, `FamilyRoom`, and `RoomFactory`.
-- **`User.java`**: Abstract base `User`, `Authenticatable`, `LoginCredentials`, `AuthenticationException`, `AdminUser`, `ReceptionistUser`, `ManagerUser`, and `UserFactory`.
-- **`Bill.java`**: `Bill` invoice entity + Strategy Pattern (`BillingStrategy`, `StandardBillingStrategy`, `CorporateBillingStrategy`, `ExtendedStayBillingStrategy`).
-- **`Booking.java`**: `Booking` reservation domain model, `BookingStatus` enum, and `HotelStatistics` KPI DTO.
+- **`Room.java`**: Abstract base `Room`, `Bookable`, `Billable`, `Displayable`, `RoomStatus`, and subclasses (`StandardRoom`, `DeluxeRoom`, `SuiteRoom`, `FamilyRoom`).
+- **`RoomFactory.java`**: Factory Method Pattern for creating rooms dynamically.
+- **`User.java`**: Abstract base `User`, `Authenticatable`, `AuthenticationException`, and subclasses (`AdminUser`, `ReceptionistUser`, `ManagerUser`).
+- **`UserFactory.java`**: Factory Method Pattern for creating users dynamically.
+- **`LoginCredentials.java`**: DTO / Value Object encapsulating login credentials.
+- **`Bill.java`**: `Bill` invoice entity (HAS-A `Booking`, HAS-A `BillingStrategy`).
+- **`BillingStrategy.java`**: Strategy Pattern (`BillingStrategy`, `StandardBillingStrategy`, `CorporateBillingStrategy`, `ExtendedStayBillingStrategy`).
+- **`Booking.java`**: `Booking` reservation domain model & `BookingStatus` enum.
+- **`HotelStatistics.java`**: DTO / Value Object for KPI Analytics reporting.
 - **`DatabaseConnection.java`**: Singleton JDBC database connection manager.
 - **`RoomDAO.java`**: `RoomDAO` and `IRoomDAO` interface.
 - **`GuestDAO.java`**: `GuestDAO` and `IGuestDAO` interface.
-- **`BookingDAO.java`**: `BookingDAO`, `IBookingDAO`, `CheckoutDAO`, and `ICheckoutDAO`.
+- **`BookingDAO.java`**: `BookingDAO` and `IBookingDAO` interface for reservation bookings.
+- **`CheckoutDAO.java`**: `CheckoutDAO` and `ICheckoutDAO` interface for checkouts and billing.
 - **`UserDAO.java`**: `UserDAO` and `IUserDAO` interface.
 - **`HotelService.java`**: `HotelService` and `IHotelService` business workflow facade.
 - **`AuthService.java`**: `AuthService` singleton and `IAuthService` authentication facade.
-- **`LoginFrame.java`**: Complete Swing Desktop GUI (`LoginFrame` portal and `MainFrame` dashboard).
+- **`LoginFrame.java`**: Swing Desktop GUI Login Portal window.
+- **`MainFrame.java`**: Swing Desktop GUI Receptionist Dashboard window.
 - **`HotelWebServer.java`**: Multi-threaded Java HTTP Server & REST API.
 - **`Main.java`**: CLI & Bootstrap entrypoint.
 - **`OOPTestRunner.java`**: Automated 7-point OOP verification test runner.

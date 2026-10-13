@@ -6,13 +6,12 @@ import java.util.Objects;
 
 /**
  * =============================================================================
- * ROOM DOMAIN HIERARCHY & FACTORY PATTERN
+ * ROOM DOMAIN HIERARCHY
  * Demonstrates:
  * - Abstraction: Abstract Room class + Bookable, Billable, Displayable interfaces
  * - Inheritance: StandardRoom, DeluxeRoom, SuiteRoom, FamilyRoom extend Room
  * - Polymorphism: Overridden getAmenities(), getMaxOccupancy(), displayDetails()
  * - Encapsulation: Private state (price, status) with guarded mutations
- * - Factory Method Pattern: RoomFactory instantiates subclasses dynamically
  * =============================================================================
  */
 
@@ -315,33 +314,5 @@ class FamilyRoom extends Room {
     @Override
     public int getMaxOccupancy() {
         return 5;
-    }
-}
-
-// =============================================================================
-// FACTORY METHOD PATTERN
-// =============================================================================
-
-class RoomFactory {
-
-    public static Room createRoom(int roomId, String roomNumber, String roomType, double pricePerNight, RoomStatus status) {
-        if (roomType == null) {
-            return new StandardRoom(roomId, roomNumber, pricePerNight, status);
-        }
-
-        String typeLower = roomType.trim().toLowerCase();
-        if (typeLower.contains("suite")) {
-            return new SuiteRoom(roomId, roomNumber, pricePerNight, status);
-        } else if (typeLower.contains("family")) {
-            return new FamilyRoom(roomId, roomNumber, pricePerNight, status);
-        } else if (typeLower.contains("deluxe") || typeLower.contains("double")) {
-            return new DeluxeRoom(roomId, roomNumber, roomType, pricePerNight, status);
-        } else {
-            return new StandardRoom(roomId, roomNumber, pricePerNight, status);
-        }
-    }
-
-    public static Room createRoom(String roomNumber, String roomType, double pricePerNight) {
-        return createRoom(0, roomNumber, roomType, pricePerNight, RoomStatus.AVAILABLE);
     }
 }

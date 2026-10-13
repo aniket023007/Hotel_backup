@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 // =============================================================================
-// AUTHENTICATION INTERFACE & VALUE OBJECTS
+// AUTHENTICATION INTERFACE & DOMAIN EXCEPTION
 // =============================================================================
 
 /**
@@ -29,42 +29,6 @@ interface Authenticatable {
 
     /** Polymorphically checks whether this entity possesses a given system permission. */
     boolean hasPermission(String permission);
-}
-
-/**
- * Value Object encapsulating login credentials.
- * Demonstrates:
- * - Encapsulation: Immutable private final fields
- * - Input Validation: Rejects invalid or null credentials early
- * - Data Transfer Object (DTO) Pattern
- */
-class LoginCredentials {
-    private final String username;
-    private final String password;
-
-    public LoginCredentials(String username, String password) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be empty.");
-        }
-        if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("Password cannot be empty.");
-        }
-        this.username = username.trim();
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String toString() {
-        return "LoginCredentials[username='" + username + "', password=******]";
-    }
 }
 
 /**
@@ -375,53 +339,5 @@ class ManagerUser extends User {
     @Override
     public String getRoleDescription() {
         return "Operational management: property oversight, occupancy performance, and financial reporting.";
-    }
-}
-
-// =============================================================================
-// USER FACTORY (Factory Method Pattern)
-// =============================================================================
-
-/**
- * UserFactory implements the Factory Method Pattern.
- * Decouples user instantiation from calling layers (DAOs and Services) by dynamically
- * constructing the appropriate polymorphic User subclass based on the assigned role.
- */
-class UserFactory {
-
-    /**
-     * Factory method creating a concrete User subclass.
-     */
-    public static User createUser(int id, String username, String passwordHash, String fullName, String role, String email, String phone) {
-        if (role == null || role.trim().isEmpty()) {
-            role = "Receptionist";
-        }
-
-        if ("admin".equalsIgnoreCase(username)) {
-            return new AdminUser(id, username, passwordHash, fullName, email, phone);
-        }
-
-        String normalizedRole = role.trim().toLowerCase();
-        switch (normalizedRole) {
-            case "admin":
-            case "administrator":
-                return new AdminUser(id, username, passwordHash, fullName, email, phone);
-
-            case "manager":
-                return new ManagerUser(id, username, passwordHash, fullName, email, phone);
-
-            case "receptionist":
-            case "staff":
-            case "front desk":
-            default:
-                return new ReceptionistUser(id, username, passwordHash, fullName, email, phone);
-        }
-    }
-
-    /**
-     * Overloaded Factory method without contact information (Compile-time Polymorphism).
-     */
-    public static User createUser(String username, String passwordHash, String fullName, String role) {
-        return createUser(0, username, passwordHash, fullName, role, "", "");
     }
 }

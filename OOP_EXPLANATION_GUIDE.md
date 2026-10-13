@@ -5,9 +5,9 @@ This guide is designed to help you **confidently explain the entire Java codebas
 
 ---
 
-## 📁 1. High-Level Folder Structure & 16 Consolidated Files
+## 📁 1. High-Level Folder Structure & 23 Modular Source Files
 
-To make the codebase clean, professional, and effortless to explain during an exam, the backend has been consolidated into **16 domain-focused, well-structured files** (down from 49 scattered files). Each OOP topic is housed inside its respective domain file:
+To maintain clean code readability while avoiding excessively long monolithic files, the backend is organized into **23 bite-sized, single-responsibility files** (~25 to 250 lines each). Every file has a clear, focused purpose:
 
 ```
 HotelManagementSystem_backup/
@@ -19,20 +19,27 @@ HotelManagementSystem_backup/
 │   └── assets/                   <-- Brand logos and photography
 │
 ├── backend/                      <-- Business Logic & Data Persistence (Pure Java 21)
-│   ├── src/                      <-- 16 Consolidated Object-Oriented Source Files
-│   │   ├── Person.java           <-- Abstraction & Inheritance (Person, Guest, Staff)
-│   │   ├── Room.java             <-- Room Hierarchy, Interfaces, Status & RoomFactory
-│   │   ├── User.java             <-- Auth Contracts, DTO, Exception, Roles & UserFactory
-│   │   ├── Bill.java             <-- Invoice Entity & Strategy Pattern (Standard, Corporate, ExtendedStay)
-│   │   ├── Booking.java          <-- Composition (Guest + Room), BookingStatus, HotelStatistics
+│   ├── src/                      <-- 23 Clean, Focused Object-Oriented Source Files
+│   │   ├── Person.java           <-- Abstraction & Inheritance (Person base, Guest, Staff)
+│   │   ├── Room.java             <-- Room Base Class, Interfaces, Status & Subclasses
+│   │   ├── RoomFactory.java      <-- Factory Method Pattern for Room Tiers
+│   │   ├── User.java             <-- User Base Class, RBAC Roles, Authenticatable
+│   │   ├── UserFactory.java      <-- Factory Method Pattern for User Roles
+│   │   ├── LoginCredentials.java <-- DTO / Value Object for User Credentials
+│   │   ├── Bill.java             <-- Invoice Entity (HAS-A Booking & BillingStrategy)
+│   │   ├── BillingStrategy.java  <-- Strategy Pattern (Standard, Corporate, ExtendedStay)
+│   │   ├── Booking.java          <-- Reservation Model (HAS-A Guest & Room, BookingStatus)
+│   │   ├── HotelStatistics.java  <-- DTO / Value Object for KPI Analytics Reporting
 │   │   ├── DatabaseConnection.java<-- Singleton JDBC Connection Manager
 │   │   ├── RoomDAO.java          <-- Room Persistence & IRoomDAO Interface
 │   │   ├── GuestDAO.java         <-- Guest Persistence & IGuestDAO Interface
-│   │   ├── BookingDAO.java       <-- Booking/Checkout Transactions, IBookingDAO, ICheckoutDAO
+│   │   ├── BookingDAO.java       <-- Room Booking Reservations & IBookingDAO
+│   │   ├── CheckoutDAO.java      <-- Checkout Billing Transactions & ICheckoutDAO
 │   │   ├── UserDAO.java          <-- User Persistence & IUserDAO Interface
-│   │   ├── HotelService.java     <-- Core Service Layer & IHotelService Interface
-│   │   ├── AuthService.java      <-- Authentication Service, Session Management & IAuthService
-│   │   ├── LoginFrame.java       <-- Swing Desktop GUI (LoginFrame + MainFrame Dashboard)
+│   │   ├── HotelService.java     <-- Core Service Layer Facade & IHotelService
+│   │   ├── AuthService.java      <-- Authentication Service, Session State & IAuthService
+│   │   ├── LoginFrame.java       <-- Swing Desktop Login Portal Window
+│   │   ├── MainFrame.java        <-- Swing Desktop Receptionist Dashboard Window
 │   │   ├── HotelWebServer.java   <-- Multi-threaded Java HTTP Server & REST API
 │   │   ├── Main.java             <-- System Bootstrap Entry Point
 │   │   └── OOPTestRunner.java    <-- Automated 7-Point OOP Verification Test Suite
@@ -75,9 +82,9 @@ HotelManagementSystem_backup/
   * `interface Displayable`: Declares `displayDetails()`.
 * In **`User.java`**:
   * `interface Authenticatable`: Declares `verifyPassword(String)`, `getUsername()`, `getRole()`, `hasPermission(String)`.
-* In **`Bill.java`**:
+* In **`BillingStrategy.java`**:
   * `interface BillingStrategy`: Contract for polymorphic pricing discount calculations.
-* In DAO files (`RoomDAO.java`, `GuestDAO.java`, `BookingDAO.java`, `UserDAO.java`):
+* In DAO files (`RoomDAO.java`, `GuestDAO.java`, `BookingDAO.java`, `CheckoutDAO.java`, `UserDAO.java`):
   * `IRoomDAO`, `IGuestDAO`, `IBookingDAO`, `ICheckoutDAO`, `IUserDAO` decouple database persistence from business logic.
 
 ---
@@ -121,6 +128,10 @@ HotelManagementSystem_backup/
   ```
   *Plain-text passwords are never stored or exposed; hashing happens inside Java's domain layer.*
 
+#### 4. Value Objects / DTOs
+* **`LoginCredentials.java`**: Encapsulates `username` and `password` with immutable `private final` fields.
+* **`HotelStatistics.java`**: Encapsulates hotel KPIs (occupancy, revenue, counts) in an immutable reporting DTO.
+
 ---
 
 ### 🔹 Pillar 3: Inheritance
@@ -150,7 +161,7 @@ HotelManagementSystem_backup/
 * **`User.java`**: Calling `user.hasPermission("USERS_MANAGE")`:
   * Returns `true` if `user` is an `AdminUser`.
   * Returns `false` if `user` is a `ReceptionistUser`.
-* **`Bill.java`**: Strategy Pattern: Calling `bill.recalculate()` uses whatever `BillingStrategy` is injected at runtime:
+* **`BillingStrategy.java`**: Strategy Pattern: Calling `bill.recalculate()` uses whatever `BillingStrategy` is injected at runtime:
   * `StandardBillingStrategy`: 0% discount + 12% GST.
   * `CorporateBillingStrategy`: 10% discount + 12% GST.
   * `ExtendedStayBillingStrategy`: 15% discount for stays $\ge 5$ nights + 12% GST.
@@ -173,13 +184,13 @@ HotelManagementSystem_backup/
 
 | Pattern | Location | Purpose & Implementation |
 |---|---|---|
-| **Factory Method** | `Room.java` (`RoomFactory`) | Decouples room instantiation from database strings: `RoomFactory.createRoom(id, num, type, price, status)`. |
-| **Factory Method** | `User.java` (`UserFactory`) | Instantiates polymorphic `AdminUser`, `ReceptionistUser`, or `ManagerUser` based on assigned DB role. |
-| **Strategy Pattern** | `Bill.java` (`BillingStrategy`) | Swappable financial tariff algorithms (`Standard`, `Corporate`, `ExtendedStay`) without modifying the `Bill` class (Open/Closed Principle). |
+| **Factory Method** | `RoomFactory.java` | Decouples room instantiation from database strings: `RoomFactory.createRoom(id, num, type, price, status)`. |
+| **Factory Method** | `UserFactory.java` | Instantiates polymorphic `AdminUser`, `ReceptionistUser`, or `ManagerUser` based on assigned DB role. |
+| **Strategy Pattern** | `BillingStrategy.java` | Swappable financial tariff algorithms (`Standard`, `Corporate`, `ExtendedStay`) without modifying the `Bill` class (Open/Closed Principle). |
 | **Singleton Pattern** | `DatabaseConnection.java` & `AuthService.java` | Single shared connection factory and synchronized active session state. |
-| **Data Access Object (DAO)** | `RoomDAO.java`, `GuestDAO.java`, `BookingDAO.java`, `UserDAO.java` | Separates business logic from low-level SQL queries and JDBC result sets. |
+| **Data Access Object (DAO)** | `RoomDAO.java`, `GuestDAO.java`, `BookingDAO.java`, `CheckoutDAO.java`, `UserDAO.java` | Separates business logic from low-level SQL queries and JDBC result sets. |
 | **Service Layer Pattern** | `HotelService.java`, `AuthService.java` | Orchestrates end-to-end workflows (guest registration, booking validation, invoice generation). |
-| **Data Transfer Object (DTO)** | `LoginCredentials` (`User.java`), `HotelStatistics` (`Booking.java`) | Immutable objects encapsulating input credentials and analytics metrics. |
+| **Data Transfer Object (DTO)** | `LoginCredentials.java`, `HotelStatistics.java` | Immutable objects encapsulating input credentials and analytics metrics. |
 
 ---
 
@@ -225,8 +236,8 @@ java -cp "backend/lib/*;lib/*;backend/bin" Main --swing
 
 ## 💬 6. Top 5 Viva Questions & Ideal Answers
 
-**Q1: Why did you use abstract classes instead of making everything concrete?**
-> *Answer*: `Person`, `Room`, and `User` represent abstract concepts that should never be directly instantiated alone. Making them abstract enforces code reusability while ensuring derived classes like `DeluxeRoom` and `Guest` must implement mandatory methods like `displayDetails()` and `getAmenities()`.
+**Q1: Why did you separate RoomFactory and UserFactory into their own files?**
+> *Answer*: Decoupling the Factory Method implementations into `RoomFactory.java` and `UserFactory.java` adheres directly to the Single Responsibility Principle (SRP). It isolates the object creation logic from entity domain modeling, allowing future room types or roles to be added without modifying the core entities.
 
 **Q2: How does your project demonstrate Runtime Polymorphism?**
 > *Answer*: When `roomDAO.getAllRoomEntities()` loads rooms from MySQL, it uses `RoomFactory` to return a list of `Room` base references holding instances of `StandardRoom`, `DeluxeRoom`, etc. When `room.displayDetails()` or `calculateTotalCost()` is invoked, Java dynamically resolves and runs the concrete subclass implementation at runtime.
@@ -235,7 +246,7 @@ java -cp "backend/lib/*;lib/*;backend/bin" Main --swing
 > *Answer*: Passwords are never stored in plain text. In `User.java`, `User.hashPassword()` uses standard Java `MessageDigest` to compute a cryptographic SHA-256 hash. Authentication compares the computed hash of user input against the hash stored in MySQL.
 
 **Q4: Where did you use the Strategy Design Pattern?**
-> *Answer*: In `Bill.java`. The `BillingStrategy` interface decouples invoice price calculation from the `Bill` entity. Depending on guest tier or length of stay, `StandardBillingStrategy`, `CorporateBillingStrategy`, or `ExtendedStayBillingStrategy` can be plugged in dynamically without altering the `Bill` class.
+> *Answer*: In `BillingStrategy.java`. The `BillingStrategy` interface decouples invoice price calculation from the `Bill` entity. Depending on guest tier or length of stay, `StandardBillingStrategy`, `CorporateBillingStrategy`, or `ExtendedStayBillingStrategy` can be plugged in dynamically without altering the `Bill` class.
 
-**Q5: Why did you consolidate from 49 files into 16 files?**
-> *Answer*: In standard Java package architecture, organizing related classes (e.g. `Room`, its specialized subclasses, its interfaces, and its factory) into a cohesive domain unit (`Room.java`) maximizes high cohesion and maintainability, making the OOP structure immediately clear and effortless to navigate.
+**Q5: How are the responsibilities divided between BookingDAO and CheckoutDAO?**
+> *Answer*: `BookingDAO.java` handles reservation bookings, room availability queries, and bookings table models. `CheckoutDAO.java` handles checkout settlement transactions, rolling back atomically if database errors occur, and instantiating finalized `Bill` invoices.

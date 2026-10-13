@@ -22,9 +22,70 @@ const state = {
 };
 
 // =============================================================================
+// AUTHENTICATION GUARD & SESSION MANAGEMENT
+// =============================================================================
+function checkAuthSession() {
+  const stored = sessionStorage.getItem('hotel_user') || localStorage.getItem('hotel_user');
+  if (!stored) {
+    window.location.replace('login.html');
+    return null;
+  }
+  try {
+    const user = JSON.parse(stored);
+    renderHeaderUser(user);
+    return user;
+  } catch (err) {
+    console.error('Invalid user session:', err);
+    sessionStorage.removeItem('hotel_user');
+    localStorage.removeItem('hotel_user');
+    window.location.replace('login.html');
+    return null;
+  }
+}
+
+function renderHeaderUser(user) {
+  if (!user) return;
+  const nameEl = document.getElementById('headerUserName');
+  const roleEl = document.getElementById('headerUserRole');
+  const avatarEl = document.getElementById('headerUserAvatar');
+
+  if (nameEl) nameEl.textContent = user.fullName || user.username || 'Staff Member';
+  if (roleEl) roleEl.textContent = user.role || 'Receptionist';
+  
+  if (avatarEl) {
+    const role = (user.role || '').toLowerCase();
+    if (role.includes('admin')) {
+      avatarEl.textContent = '👑';
+    } else if (role.includes('manager')) {
+      avatarEl.textContent = '👔';
+    } else {
+      avatarEl.textContent = '🛎️';
+    }
+  }
+}
+
+async function handleLogout() {
+  if (!confirm('Are you sure you want to log out of Grand Horizon Hotel Management?')) {
+    return;
+  }
+  try {
+    await fetch(API_BASE + '/auth/logout', { method: 'POST' });
+  } catch (err) {
+    console.warn('Logout API notification failed:', err);
+  }
+  sessionStorage.removeItem('hotel_user');
+  localStorage.removeItem('hotel_user');
+  window.location.replace('login.html');
+}
+
+// =============================================================================
 // INITIALIZATION
 // =============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Enforce authentication gate first
+  const currentUser = checkAuthSession();
+  if (!currentUser) return;
+
   initClock();
   setupModalBackdrops();
   checkDatabaseHealth();

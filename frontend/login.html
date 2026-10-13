@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Horizon Hotel & Suites — Staff Access Portal</title>
+  <meta name="description" content="Secure Java-backed staff login portal for Grand Horizon Hotel Management System with MySQL SHA-256 authentication.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+  <style>
+    /* Dedicated Luxury Login Page Styling */
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 480px;
+      z-index: 10;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      padding: 2.5rem 2rem;
+      position: relative;
+      overflow: hidden;
+      animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gold-gradient);
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-crest {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.05) 100%);
+      border: 2px solid var(--gold-primary);
+      color: var(--gold-primary);
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+    }
+
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .login-title span {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .db-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      color: #34d399;
+    }
+
+    .db-status-badge.error {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.25);
+      color: #fb7185;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-box svg.input-icon {
+      position: absolute;
+      left: 1rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color var(--transition-fast);
+    }
+
+    .input-box input {
+      width: 100%;
+      padding: 0.85rem 2.75rem 0.85rem 2.85rem;
+      background: rgba(13, 20, 36, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      transition: all var(--transition-fast);
+    }
+
+    .input-box input:focus {
+      outline: none;
+      border-color: var(--gold-primary);
+      background: rgba(13, 20, 36, 0.95);
+      box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.15);
+    }
+
+    .input-box input:focus + svg.input-icon,
+    .input-box:focus-within svg.input-icon {
+      color: var(--gold-primary);
+    }
+
+    .password-toggle-btn {
+      position: absolute;
+      right: 0.75rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast);
+    }
+
+    .password-toggle-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 0.95rem;
+      margin-top: 0.5rem;
+      background: var(--gold-gradient);
+      color: #0b1120;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all var(--transition-base);
+      box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3);
+    }
+
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(234, 179, 8, 0.45);
+      filter: brightness(1.05);
+    }
+
+    .btn-login:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .login-alert {
+      display: none;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      align-items: center;
+      gap: 0.6rem;
+      animation: alertSlide 0.3s ease;
+    }
+
+    @keyframes alertSlide {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-alert.error {
+      display: flex;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fda4af;
+    }
+
+    .login-alert.success {
+      display: flex;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    /* Security callout note */
+    .security-note {
+      margin-top: 1.5rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .security-note svg {
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      color: var(--gold-primary);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(11, 17, 32, 0.3);
+      border-top-color: #0b1120;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrapper">
+    <div class="login-container">
+      <div class="login-card">
+
+        <!-- Luxury Crest & Header -->
+        <div class="login-header">
+          <div class="login-crest">GH</div>
+          <h1 class="login-title">GRAND <span>HORIZON</span></h1>
+          <p class="login-subtitle">Front Desk & Staff Portal</p>
+          <div class="db-status-badge" id="dbStatusBadge">
+            <span class="status-dot"></span>
+            <span id="dbStatusBadgeText">Verifying Database...</span>
+          </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div class="login-alert" id="loginAlert">
+          <svg id="alertIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="alertMessage">Invalid username or password.</span>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" autocomplete="on" onsubmit="handleFormLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="loginUsername">
+              <span>Username</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Database Account</span>
+            </label>
+            <div class="input-box">
+              <input type="text" id="loginUsername" name="username" placeholder="Enter username (e.g. receptionist)" required autofocus autocomplete="username">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">
+              <span>Password</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">SHA-256 Hashed</span>
+            </label>
+            <div class="input-box">
+              <input type="password" id="loginPassword" name="password" placeholder="Enter password" required autocomplete="current-password">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" aria-label="Toggle password view">
+                <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-login" id="submitLoginBtn">
+            <span id="btnText">Sign In to Dashboard</span>
+            <svg id="btnIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <div class="spinner" id="btnSpinner" style="display: none;"></div>
+          </button>
+        </form>
+
+        <!-- Academic Security Callout -->
+        <div class="security-note">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div>
+            <strong>Security Notice:</strong> Authentication is handled by Java OOP <code>AuthService</code> and <code>UserDAO</code>. Passwords are validated using <strong>SHA-256 cryptographic hashing</strong> against the MySQL database.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Live Database Connection Check on Page Load
+    async function checkDbConnection() {
+      const badge = document.getElementById('dbStatusBadge');
+      const text = document.getElementById('dbStatusBadgeText');
+      try {
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          const data = await res.json();
+          badge.classList.remove('error');
+          text.textContent = 'MySQL Connected (' + (data.catalog || 'hotel_management') + ')';
+        } else {
+          badge.classList.add('error');
+          text.textContent = 'Database Connection Degraded';
+        }
+      } catch (err) {
+        badge.classList.add('error');
+        text.textContent = 'Backend Offline';
+      }
+    }
+
+    // Toggle Password Visibility
+    function togglePasswordVisibility() {
+      const input = document.getElementById('loginPassword');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        input.type = 'password';
+        eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
+
+    // Alert helpers
+    function showAlert(msg, isSuccess = false) {
+      const alert = document.getElementById('loginAlert');
+      const text = document.getElementById('alertMessage');
+      const icon = document.getElementById('alertIcon');
+      
+      text.textContent = msg;
+      alert.className = isSuccess ? 'login-alert success' : 'login-alert error';
+      if (isSuccess) {
+        icon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+      } else {
+        icon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+      }
+      alert.style.display = 'flex';
+    }
+
+    function hideAlert() {
+      document.getElementById('loginAlert').style.display = 'none';
+    }
+
+    // Form Submission with Java REST API Authentication
+    async function handleFormLogin(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!username || !password) {
+        showAlert('Please enter both username and password.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitLoginBtn');
+      const btnText = document.getElementById('btnText');
+      const btnIcon = document.getElementById('btnIcon');
+      const btnSpinner = document.getElementById('btnSpinner');
+
+      // UI Loading state
+      submitBtn.disabled = true;
+      btnText.textContent = 'Verifying with MySQL...';
+      btnIcon.style.display = 'none';
+      btnSpinner.style.display = 'block';
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Authentication Successful!
+          showAlert('Authentication successful! Opening dashboard...', true);
+          
+          // Save session
+          sessionStorage.setItem('hotel_user', JSON.stringify(data.user));
+          localStorage.setItem('hotel_user', JSON.stringify(data.user));
+
+          // Smooth redirect to index.html
+          setTimeout(() => {
+            window.location.replace('index.html');
+          }, 600);
+        } else {
+          // Authentication Failed
+          const errorMsg = data.error || 'Invalid username or password.';
+          showAlert(errorMsg);
+          submitBtn.disabled = false;
+          btnText.textContent = 'Sign In to Dashboard';
+          btnIcon.style.display = 'inline-block';
+          btnSpinner.style.display = 'none';
+          document.getElementById('loginPassword').value = '';
+          document.getElementById('loginPassword').focus();
+        }
+      } catch (err) {
+        console.error('Login request failed:', err);
+        showAlert('Network error: Unable to connect to Java server.');
+        submitBtn.disabled = false;
+        btnText.textContent = 'Sign In to Dashboard';
+        btnIcon.style.display = 'inline-block';
+        btnSpinner.style.display = 'none';
+      }
+    }
+
+    // Auto-check DB status on initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkDbConnection();
+      
+      // If user is already authenticated in this session, optionally prefill or verify
+      const stored = sessionStorage.getItem('hotel_user');
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          if (user && user.username) {
+            document.getElementById('loginUsername').value = user.username;
+          }
+        } catch (e) {}
+      }
+    });
+  </script>
+</body>
+</html>

@@ -16,9 +16,17 @@ public class MainFrame extends JFrame {
     private final IBookingDAO bookingDAO = new BookingDAO();
     private final ICheckoutDAO checkoutDAO = new CheckoutDAO();
 
+    private User currentUser;
+
     public MainFrame() {
-        setTitle("Hotel Management System");
-        setSize(800, 550);
+        this(null);
+    }
+
+    public MainFrame(User user) {
+        this.currentUser = user;
+
+        setTitle("Hotel Management System — Grand Horizon");
+        setSize(850, 580);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -37,18 +45,25 @@ public class MainFrame extends JFrame {
         );
         heading.setForeground(new Color(25, 55, 90));
 
+        String subtitleText = (user != null)
+            ? "Logged in as: " + user.getName() + " (" + user.getRole() + ")"
+            : "Receptionist Dashboard (Pure Java OOP)";
+
         JLabel subtitle = new JLabel(
-            "Receptionist Dashboard (Pure Java OOP)",
+            subtitleText,
             SwingConstants.CENTER
         );
 
-        subtitle.setFont(new Font("Arial", Font.PLAIN, 16));
+        subtitle.setFont(new Font("Arial", Font.PLAIN, 15));
+        if (user != null) {
+            subtitle.setForeground(new Color(185, 145, 80)); // Luxury gold accent
+        }
 
         JPanel header = new JPanel(new GridLayout(2, 1, 5, 5));
         header.add(heading);
         header.add(subtitle);
 
-        // Dashboard buttons
+        // Dashboard buttons (4 rows x 2 columns = 8 slots)
         JPanel buttonPanel = new JPanel(
             new GridLayout(4, 2, 15, 15)
         );
@@ -60,6 +75,7 @@ public class MainFrame extends JFrame {
         JButton bookingButton = new JButton("View Bookings");
         JButton billButton = new JButton("Calculate Bill");
         JButton checkoutButton = new JButton("Check Out");
+        JButton logoutButton = new JButton("Sign Out / Switch User");
 
         JButton[] buttons = {
             roomsButton,
@@ -68,14 +84,18 @@ public class MainFrame extends JFrame {
             bookButton,
             bookingButton,
             billButton,
-            checkoutButton
+            checkoutButton,
+            logoutButton
         };
 
         for (JButton button : buttons) {
-            button.setFont(new Font("Arial", Font.BOLD, 16));
+            button.setFont(new Font("Arial", Font.BOLD, 15));
             button.setFocusPainted(false);
             buttonPanel.add(button);
         }
+
+        logoutButton.setBackground(new Color(254, 242, 242));
+        logoutButton.setForeground(new Color(185, 28, 28));
 
         // Button actions
         roomsButton.addActionListener(e -> showRooms());
@@ -85,11 +105,31 @@ public class MainFrame extends JFrame {
         bookingButton.addActionListener(e -> viewBooking());
         billButton.addActionListener(e -> calculateBill());
         checkoutButton.addActionListener(e -> checkout());
+        logoutButton.addActionListener(e -> handleLogout());
 
         mainPanel.add(header, BorderLayout.NORTH);
         mainPanel.add(buttonPanel, BorderLayout.CENTER);
 
         add(mainPanel);
+    }
+
+    private void handleLogout() {
+        int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to sign out and return to the login screen?",
+            "Confirm Sign Out",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            AuthService.getInstance().logout();
+            dispose();
+            SwingUtilities.invokeLater(() -> {
+                LoginFrame loginFrame = new LoginFrame();
+                loginFrame.setVisible(true);
+            });
+        }
     }
 
     private void showRooms() {
@@ -400,8 +440,8 @@ public class MainFrame extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
+            LoginFrame loginFrame = new LoginFrame();
+            loginFrame.setVisible(true);
         });
     }
 }

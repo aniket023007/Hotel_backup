@@ -5,10 +5,10 @@ echo    GRAND HORIZON HOTEL MANAGEMENT SYSTEM (SWING GUI)
 echo =======================================================
 echo.
 
-if not exist bin mkdir bin
+if not exist backend\bin mkdir backend\bin
 
 echo [1/2] Compiling Java source files...
-javac -cp "lib/*;src" -d bin src/*.java
+javac -cp "backend/lib/*;lib/*;backend/src;src" -d backend/bin backend/src/*.java
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo Compilation failed! Please check your JDK installation.
@@ -17,6 +17,6 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo [2/2] Launching Swing Desktop Interface...
-java -cp "lib/*;bin;src" Main --swing
+java -cp "backend/lib/*;lib/*;backend/bin;bin" Main --swing
 
 pause

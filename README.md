@@ -30,32 +30,32 @@ c:\Users\Admin\OneDrive\Desktop\HotelManagementSystem_backup
 #### Method A: Using VS Code "Run and Debug" (F5) ⭐ Recommended
 1. Open the **Run and Debug** view on the left sidebar (`Ctrl + Shift + D`).
 2. Select your desired launch profile from the dropdown at the top:
-   - **`1. Run Hotel Web Application (Default)`**: Starts the Web REST API server on port 8080.
-   - **`2. Run Swing Desktop Application`**: Launches the classic receptionist desktop GUI.
-   - **`3. Run OOP Validation Tests`**: Executes the 5-point automated OOP verification suite.
+   - **`1. Run Hotel Web Application (Default)`**: Starts the Web REST API server on port 8080 and automatically opens the **Login Portal**.
+   - **`2. Run Swing Desktop Application`**: Launches the classic receptionist desktop GUI login portal.
+   - **`3. Run OOP Validation Tests`**: Executes the 7-point automated OOP verification suite.
 3. Click the green **Play (▷)** button or press **`F5`**.
-4. If running the Web Application, open your browser to:
-   👉 **http://localhost:8080/index.html**
+4. The **Staff Login Portal** opens automatically at:
+   👉 **http://localhost:8080/login.html**
 
 #### Method B: Using 1-Click Batch Scripts
 In the VS Code terminal (or by double-clicking in Windows File Explorer):
-- **Web App**: Run `.\run-web.bat` (Compiles, starts server, and auto-opens browser)
+- **Web App & Login**: Run `.\run-web.bat` (Compiles, starts server, and auto-opens login page)
 - **Desktop Swing GUI**: Run `.\run-swing.bat`
 - **OOP Tests**: Run `.\run-test.bat`
 
 #### Method C: Using VS Code Terminal Command Line
 ```powershell
 # Compile the project:
-javac -cp "lib/*;src" -d bin src/*.java
+javac -cp "backend/lib/*;lib/*;backend/src" -d backend/bin backend/src/*.java
 
-# Run Web Server:
-java -cp "lib/*;bin;src" Main
+# Run Web Server (Auto-opens http://localhost:8080/login.html):
+java -cp "backend/lib/*;lib/*;backend/bin" Main
 
 # Run Desktop Swing GUI:
-java -cp "lib/*;bin;src" Main --swing
+java -cp "backend/lib/*;lib/*;backend/bin" Main --swing
 
 # Run OOP Validation Tests:
-java -cp "lib/*;bin;src" Main --test
+java -cp "backend/lib/*;lib/*;backend/bin" OOPTestRunner
 ```
 
 ---
@@ -87,7 +87,17 @@ java -cp "lib/*;bin;src" Main --test
 
 ---
 
-## 🗄️ Database Setup
+## 🗄️ Database Setup & User Authentication
 * **Engine**: MySQL (`localhost:3306`)
 * **Database**: `hotel_management`
 * **Driver**: `lib/mysql-connector-j-26.7.0.jar`
+
+### 🔐 Database Demo Accounts (SHA-256 Hashed)
+Passwords are stored in the MySQL `users` table as SHA-256 hashes. Plain text passwords are validated through Java `MessageDigest` SHA-256 in the domain model (`User.verifyPassword(...)`):
+
+| Role | Username | Password | Stored SHA-256 Hash |
+| :--- | :--- | :--- | :--- |
+| **🛎️ Receptionist** | `receptionist` | `staff123` | `10176e7b7b24d317acfcf8d2064cfd2f24e154f7b5a96603077d5ef813d6a6b6` |
+| **👑 Admin** | `admin` | `Admin@123` / `admin123` | `e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7` |
+| **👔 Manager** | `manager` | `manager123` | `866485796cfa8d7c0cf7111640205b83076433547577511d81f8030ae99ecea5` |
+

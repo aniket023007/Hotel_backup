@@ -3,13 +3,23 @@
     "configurations": [
         {
             "type": "java",
+            "name": "LoginFrame",
+            "request": "launch",
+            "mainClass": "LoginFrame",
+            "projectName": "HotelManagementSystem_backup_38c9c25a"
+        },
+        {
+            "type": "java",
             "name": "1. Run Hotel Web Application (Default)",
             "request": "launch",
             "mainClass": "Main",
             "projectName": "HotelManagementSystem",
             "classPaths": [
+                "${workspaceFolder}/backend/lib/mysql-connector-j-26.7.0.jar",
                 "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/backend/src",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/backend/bin",
                 "${workspaceFolder}/bin"
             ]
         },
@@ -21,8 +31,11 @@
             "args": "--swing",
             "projectName": "HotelManagementSystem",
             "classPaths": [
+                "${workspaceFolder}/backend/lib/mysql-connector-j-26.7.0.jar",
                 "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/backend/src",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/backend/bin",
                 "${workspaceFolder}/bin"
             ]
         },
@@ -34,8 +47,11 @@
             "args": "--test",
             "projectName": "HotelManagementSystem",
             "classPaths": [
+                "${workspaceFolder}/backend/lib/mysql-connector-j-26.7.0.jar",
                 "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/backend/src",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/backend/bin",
                 "${workspaceFolder}/bin"
             ]
         },
@@ -45,8 +61,11 @@
             "request": "launch",
             "mainClass": "HotelWebServer",
             "classPaths": [
+                "${workspaceFolder}/backend/lib/mysql-connector-j-26.7.0.jar",
                 "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/backend/src",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/backend/bin",
                 "${workspaceFolder}/bin"
             ]
         },
@@ -56,8 +75,11 @@
             "request": "launch",
             "mainClass": "MainFrame",
             "classPaths": [
+                "${workspaceFolder}/backend/lib/mysql-connector-j-26.7.0.jar",
                 "${workspaceFolder}/lib/mysql-connector-j-26.7.0.jar",
+                "${workspaceFolder}/backend/src",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/backend/bin",
                 "${workspaceFolder}/bin"
             ]
         }

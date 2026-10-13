@@ -24,8 +24,9 @@ public class HotelWebServer {
 
     private static final int DEFAULT_PORT = 8080;
 
-    // Service Layer Abstraction (Dependency Inversion)
+    // Service Layer Abstractions (Dependency Inversion)
     private static final IHotelService hotelService = new HotelService();
+    private static final IAuthService authService = AuthService.getInstance();
 
     public static void main(String[] args) {
         int port = DEFAULT_PORT;
@@ -37,6 +38,12 @@ public class HotelWebServer {
 
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+
+            // Authentication Endpoints (IAuthService)
+            server.createContext("/api/auth/login", new AuthLoginHandler());
+            server.createContext("/api/auth/current", new AuthCurrentHandler());
+            server.createContext("/api/auth/logout", new AuthLogoutHandler());
+            server.createContext("/api/auth/users", new AuthUsersHandler());
 
             // REST API Endpoints
             server.createContext("/api/health", new HealthHandler());
@@ -345,24 +352,139 @@ public class HotelWebServer {
     }
 
     // =========================================================================
+    // AUTHENTICATION HANDLERS (Delegating to IAuthService)
+    // =========================================================================
+
+    // /api/auth/login (POST)
+    static class AuthLoginHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (handleCors(exchange)) return;
+
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendErrorResponse(exchange, 405, "Method not allowed. Use POST.");
+                return;
+            }
+
+            try {
+                String body = readRequestBody(exchange);
+                Map<String, String> data = parseJsonSimple(body);
+
+                String username = data.get("username");
+                String password = data.get("password");
+
+                if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+                    sendErrorResponse(exchange, 400, "Username and password are required.");
+                    return;
+                }
+
+                // Polymorphic authentication via encapsulated value object
+                LoginCredentials credentials = new LoginCredentials(username, password);
+                User user = authService.login(credentials);
+
+                Map<String, Object> res = new LinkedHashMap<>();
+                res.put("success", true);
+                res.put("message", "Authentication successful.");
+                res.put("user", user.toMap());
+
+                sendJsonResponse(exchange, 200, toJson(res));
+            } catch (AuthenticationException e) {
+                sendErrorResponse(exchange, 401, e.getMessage());
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, "Server error: " + e.getMessage());
+            }
+        }
+    }
+
+    // /api/auth/current (GET)
+    static class AuthCurrentHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (handleCors(exchange)) return;
+
+            Map<String, Object> res = new LinkedHashMap<>();
+            if (authService.isAuthenticated()) {
+                res.put("authenticated", true);
+                res.put("user", authService.getCurrentUser().toMap());
+            } else {
+                res.put("authenticated", false);
+                res.put("user", null);
+            }
+            sendJsonResponse(exchange, 200, toJson(res));
+        }
+    }
+
+    // /api/auth/logout (POST)
+    static class AuthLogoutHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (handleCors(exchange)) return;
+
+            authService.logout();
+
+            Map<String, Object> res = new LinkedHashMap<>();
+            res.put("success", true);
+            res.put("message", "User signed out successfully.");
+            sendJsonResponse(exchange, 200, toJson(res));
+        }
+    }
+
+    // /api/auth/users (GET) - Demo endpoint for interviewer inspection of MySQL users
+    static class AuthUsersHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (handleCors(exchange)) return;
+
+            try {
+                List<User> users = authService.listAllUsers();
+                List<Map<String, Object>> list = new ArrayList<>();
+                for (User u : users) {
+                    list.add(u.toMap());
+                }
+                Map<String, Object> res = new LinkedHashMap<>();
+                res.put("success", true);
+                res.put("users", list);
+                sendJsonResponse(exchange, 200, toJson(res));
+            } catch (Exception e) {
+                sendErrorResponse(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    // =========================================================================
     // STATIC FILE HANDLER
     // =========================================================================
 
     static class StaticFileHandler implements HttpHandler {
-        private final Path webRoot = Paths.get("web").toAbsolutePath().normalize();
+        private final Path webRoot = resolveWebRoot();
+
+        private static Path resolveWebRoot() {
+            Path[] candidates = new Path[] {
+                Paths.get("frontend"),
+                Paths.get("../frontend"),
+                Paths.get("web"),
+                Paths.get("../web")
+            };
+            for (Path p : candidates) {
+                if (Files.exists(p) && Files.isDirectory(p)) {
+                    return p.toAbsolutePath().normalize();
+                }
+            }
+            return Paths.get("frontend").toAbsolutePath().normalize();
+        }
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if (handleCors(exchange)) return;
 
             String pathStr = exchange.getRequestURI().getPath();
-            if (pathStr.equals("/") || pathStr.isEmpty()) {
-                pathStr = "/index.html";
+            if (pathStr.equals("/") || pathStr.isEmpty() || pathStr.equals("/login")) {
+                pathStr = "/login.html";
             }
 
             Path filePath = webRoot.resolve(pathStr.substring(1)).normalize();
             if (!filePath.startsWith(webRoot) || !Files.exists(filePath) || Files.isDirectory(filePath)) {
-                Path fallback = webRoot.resolve("index.html");
+                Path fallback = webRoot.resolve("login.html");
                 if (Files.exists(fallback)) {
                     serveFile(exchange, fallback, "text/html; charset=UTF-8");
                     return;

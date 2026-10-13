@@ -5,6 +5,9 @@ import java.util.Objects;
  * for humans in the hotel system (Guests, Staff).
  * Demonstrates Abstraction and Encapsulation.
  */
+
+
+
 public abstract class Person implements Displayable {
 
     private int id;
